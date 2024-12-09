@@ -8,7 +8,7 @@ use quick_xml::events::BytesStart;
 /// - `process_element`: Called for each XML element
 /// - `finalize`: Called after all elements have been processed
 /// - `name`: Returns the plugin's name for identification
-pub trait SVGPlugin {
+pub trait SVGPlugin: PluginStatistics {
     /// Initialize the plugin before processing begins.
     ///
     /// This method is called once before processing the SVG file.
@@ -76,6 +76,12 @@ mod tests {
 
         fn name(&self) -> &str {
             "TestPlugin"
+        }
+    }
+
+    impl PluginStatistics for TestPlugin {
+        fn get_statistics(&self) -> Vec<(&str, String)> {
+            Vec::new()
         }
     }
 

@@ -1,19 +1,19 @@
+use quick_xml::events::Event;
+use quick_xml::reader::Reader;
+use quick_xml::writer::Writer;
 use std::fs::File;
 use std::io::{self, BufReader, BufWriter, Write};
 use std::path::Path;
 use std::time::Instant;
-use quick_xml::events::Event;
-use quick_xml::reader::Reader;
-use quick_xml::writer::Writer;
 
+use crate::cli::PluginConfig;
 use crate::plugins::{
-    SVGPlugin,
     PathOptimizerPlugin,
     // DeduplicateGradientsPlugin,
     // RemoveIDPlugin,
     // RemoveDataAttributesPlugin,
+    SVGPlugin,
 };
-use crate::cli::PluginConfig;
 
 pub struct SVGProcessor {
     chunk_size: usize,
@@ -36,7 +36,11 @@ impl SVGProcessor {
         self.plugins.push(Box::new(plugin));
     }
 
-    pub fn process_file<P: AsRef<Path>>(&mut self, input_path: P, output_path: P) -> io::Result<()> {
+    pub fn process_file<P: AsRef<Path>>(
+        &mut self,
+        input_path: P,
+        output_path: P,
+    ) -> io::Result<()> {
         self.start_time = Some(Instant::now());
 
         // Initialize all plugins
@@ -66,7 +70,7 @@ impl SVGProcessor {
                     writer.write_event(processed_event)?;
                     processed = true;
                     xml_buf.clear();
-                },
+                }
                 Err(e) => return Err(io::Error::new(io::ErrorKind::InvalidData, e)),
             }
         }
@@ -83,7 +87,7 @@ impl SVGProcessor {
         if !processed {
             return Err(io::Error::new(
                 io::ErrorKind::InvalidData,
-                "No SVG content was processed"
+                "No SVG content was processed",
             ));
         }
 
@@ -106,7 +110,7 @@ impl SVGProcessor {
                 for plugin in &mut self.plugins {
                     plugin.process_element(elem)?;
                 }
-            },
+            }
             _ => {}
         }
 
@@ -116,8 +120,6 @@ impl SVGProcessor {
 
     pub fn get_statistics(&self) -> ProcessingStatistics {
         ProcessingStatistics {
-            paths_processed: 0,
-            chars_saved: 0,
             processing_time: self.processing_time,
             total_time: self.start_time.map(|t| t.elapsed().as_secs_f64()),
         }
@@ -125,8 +127,6 @@ impl SVGProcessor {
 }
 
 pub struct ProcessingStatistics {
-    pub paths_processed: usize,
-    pub chars_saved: usize,
     pub processing_time: Option<f64>,
     pub total_time: Option<f64>,
 }
@@ -147,12 +147,13 @@ impl SVGProcessorCLI {
     pub fn configure(&mut self, config: PluginConfig) -> &mut Self {
         if let Some(path_config) = config.path_optimizer {
             if self.verbose {
-                println!("Enabling path optimizer with {} decimal places",
-                         path_config.decimal_places);
+                println!(
+                    "Enabling path optimizer with {} decimal places",
+                    path_config.decimal_places
+                );
             }
-            self.processor.add_plugin(PathOptimizerPlugin::new(
-                path_config.decimal_places
-            ));
+            self.processor
+                .add_plugin(PathOptimizerPlugin::new(path_config.decimal_places));
         }
 
         if config.gradient_deduplicator {
@@ -186,9 +187,11 @@ impl SVGProcessorCLI {
 
     pub fn process<P: AsRef<Path>>(&mut self, input: P, output: P) -> io::Result<()> {
         if self.verbose {
-            println!("Processing {} -> {}",
-                     input.as_ref().display(),
-                     output.as_ref().display());
+            println!(
+                "Processing {} -> {}",
+                input.as_ref().display(),
+                output.as_ref().display()
+            );
         }
 
         let start = Instant::now();
@@ -200,16 +203,11 @@ impl SVGProcessorCLI {
             }
         } else if self.verbose {
             let stats = self.processor.get_statistics();
-
             println!("\nProcessing Statistics:");
             println!("--------------------");
-            println!("Paths processed: {}", stats.paths_processed);
-            println!("Characters saved: {}", stats.chars_saved);
 
             if let Some(processing_time) = stats.processing_time {
                 println!("Processing time: {:.2} seconds", processing_time);
-                println!("Processing speed: {:.2} paths/second",
-                         stats.paths_processed as f64 / processing_time);
             }
 
             if let Some(total_time) = stats.total_time {
@@ -217,6 +215,17 @@ impl SVGProcessorCLI {
             }
 
             println!("--------------------");
+
+            // Loop over all plugins and call the get_statistics method
+            for plugin in &self.processor.plugins {
+                println!("\n{} Statistics:", plugin.name());
+                println!("--------------------");
+                let plugin_stats = plugin.get_statistics();
+                for (name, value) in plugin_stats {
+                    println!("{}: {}", name, value);
+                }
+                println!("--------------------");
+            }
         }
 
         result
@@ -227,7 +236,9 @@ impl SVGProcessorCLI {
         println!("  1. Path Optimizer");
         println!("     --optimize-paths");
         println!("     --path-decimals <VALUE>");
-        println!("     Optimizes path data by reducing decimal places and removing unnecessary spaces");
+        println!(
+            "     Optimizes path data by reducing decimal places and removing unnecessary spaces"
+        );
     }
 }
 
@@ -238,7 +249,7 @@ mod tests {
     #[test]
     fn test_path_optimization() -> io::Result<()> {
         let mut processor = SVGProcessor::new(1024);
-        processor.enable_path_optimization(2);
+        processor.add_plugin(PathOptimizerPlugin::new(2));
 
         // Create test input file
         let test_svg = r#"<?xml version="1.0"?>

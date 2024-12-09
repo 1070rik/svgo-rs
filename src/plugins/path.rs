@@ -1,4 +1,4 @@
-use crate::plugins::traits::SVGPlugin;
+use crate::plugins::traits::{PluginStatistics, SVGPlugin};
 use quick_xml::events::BytesStart;
 use std::io;
 
@@ -24,7 +24,6 @@ impl PathOptimizerPlugin {
 
         while let Some(c) = chars.next() {
             match c {
-                // SVG path commands
                 'M' | 'm' | 'L' | 'l' | 'H' | 'h' | 'V' | 'v' |
                 'C' | 'c' | 'S' | 's' | 'Q' | 'q' | 'T' | 't' |
                 'A' | 'a' | 'Z' | 'z' => {
@@ -32,9 +31,7 @@ impl PathOptimizerPlugin {
                     optimized.push(c);
                 },
 
-                // Numbers, including decimals and negative signs
                 '0'..='9' | '.' | '-' => {
-                    // Add space between numbers if needed
                     if prev_was_number {
                         optimized.push(' ');
                     }
@@ -42,7 +39,6 @@ impl PathOptimizerPlugin {
                     let mut number = String::new();
                     number.push(c);
 
-                    // Collect the full number
                     while let Some(&next) = chars.peek() {
                         if next.is_ascii_digit() || next == '.' || next == 'e' || next == 'E' || next == '-' {
                             number.push(chars.next().unwrap());
@@ -51,10 +47,8 @@ impl PathOptimizerPlugin {
                         }
                     }
 
-                    // Parse and round the number
                     if let Ok(num) = number.parse::<f64>() {
                         let rounded = format!("{:.1$}", num, self.decimal_places);
-                        // Remove trailing zeros and unnecessary decimal points
                         let trimmed = rounded.trim_end_matches('0').trim_end_matches('.');
                         optimized.push_str(trimmed);
                         prev_was_number = true;
@@ -64,29 +58,17 @@ impl PathOptimizerPlugin {
                     }
                 },
 
-                // Whitespace and commas
                 ' ' | ',' => {
-                    // Only add space if between numbers and not before commands
-                    if prev_was_number {
-                        if let Some(&next) = chars.peek() {
-                            if next.is_ascii_digit() || next == '-' {
-                                optimized.push(' ');
-                            }
-                        }
-                    }
+                    // Skip all whitespace and commas - we handle spacing in the number processing
+                    continue;
                 },
 
-                // Preserve any other characters (shouldn't occur in valid path data)
                 _ => optimized.push(c),
             }
         }
 
         self.total_chars_saved += path_data.len() - optimized.len();
         optimized
-    }
-
-    pub fn get_statistics(&self) -> (usize, usize) {
-        (self.path_count, self.total_chars_saved)
     }
 }
 
@@ -142,6 +124,15 @@ impl SVGPlugin for PathOptimizerPlugin {
 
     fn name(&self) -> &str {
         "PathOptimizer"
+    }
+}
+
+impl PluginStatistics for PathOptimizerPlugin {
+    fn get_statistics(&self) -> Vec<(&str, String)> {
+        vec![
+            ("Paths optimized", self.path_count.to_string()),
+            ("Total characters saved", self.total_chars_saved.to_string()),
+        ]
     }
 }
 
