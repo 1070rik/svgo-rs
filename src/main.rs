@@ -40,6 +40,9 @@ fn run(cli: Cli) -> std::io::Result<()> {
                 path_optimizer: Some(cli::PathOptimizerConfig {
                     decimal_places: 2,
                 }),
+                transform_optimizer: Some(cli::TransformOptimizerConfig {
+                    decimal_places: 2,
+                }),
                 gradient_deduplicator: true,
                 id_remover: cli::IdRemoverConfig::default(),
                 data_attr_remover: true,
@@ -83,6 +86,8 @@ mod tests {
             output: PathBuf::from("output.svg"),
             optimize_paths: true,
             path_decimals: 3,
+            optimize_transforms: true,
+            transform_decimals: 2,
             dedupe_gradients: true,
             remove_ids: true,
             remove_data_attrs: false,
@@ -93,6 +98,8 @@ mod tests {
 
         assert!(config.path_optimizer.is_some());
         assert_eq!(config.path_optimizer.unwrap().decimal_places, 3);
+        assert!(config.transform_optimizer.is_some());
+        assert_eq!(config.transform_optimizer.unwrap().decimal_places, 2);
         assert!(config.gradient_deduplicator);
         assert!(config.id_remover.enabled);
         assert!(!config.data_attr_remover);

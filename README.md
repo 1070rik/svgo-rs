@@ -80,8 +80,10 @@ svgo-rs optimize [OPTIONS] <INPUT> <OUTPUT>
 
 OPTIONS:
     --optimize-paths           Enable path optimization
-    --path-decimals <N>       Decimal places for path optimization [default: 2]
-    
+    --path-decimals <N>        Decimal places for path optimization [default: 2]
+    --optimize-transforms      Enable transform optimization
+    --transform-decimals <N>   Decimal places for transform optimization [default: 2]
+
 TODO OPTIONS:
     --dedupe-gradients        Enable gradient deduplication
     --remove-ids              Remove IDs from elements
@@ -100,6 +102,36 @@ Optimizes SVG path data by:
 ```bash
 svgo-rs optimize input.svg output.svg --optimize-paths --path-decimals 2
 ```
+
+**Example:**
+```
+Input:  <path d="M 100.000 200.000 L 300.000 400.000"/>
+Output: <path d="M100 200L300 400"/>
+```
+
+### Transform Optimizer
+Optimizes SVG transform attributes by:
+- Removing identity transforms (e.g., `translate(0,0)`, `scale(1)`, `rotate(0)`)
+- Reducing decimal place precision
+- Simplifying transform values
+- Removing unnecessary whitespace
+
+```bash
+svgo-rs optimize input.svg output.svg --optimize-transforms --transform-decimals 2
+```
+
+**Example:**
+```
+Input:  <g transform="translate(10.123, 20.456) scale(1) rotate(0)">
+Output: <g transform="translate(10.12 20.46)">
+```
+
+**Supported transforms:**
+- `translate(x, y)` - Removes if x and y are 0
+- `scale(x, y)` - Removes if values are 1
+- `rotate(angle)` - Removes if angle is 0
+- `skewX(angle)` / `skewY(angle)` - Removes if angle is 0
+- `matrix(a, b, c, d, e, f)` - Removes if identity matrix
 
 ## Performance
 

@@ -9,6 +9,7 @@ use std::time::Instant;
 use crate::cli::PluginConfig;
 use crate::plugins::{
     PathOptimizerPlugin,
+    TransformOptimizerPlugin,
     // DeduplicateGradientsPlugin,
     // RemoveIDPlugin,
     // RemoveDataAttributesPlugin,
@@ -156,6 +157,17 @@ impl SVGProcessorCLI {
                 .add_plugin(PathOptimizerPlugin::new(path_config.decimal_places));
         }
 
+        if let Some(transform_config) = config.transform_optimizer {
+            if self.verbose {
+                println!(
+                    "Enabling transform optimizer with {} decimal places",
+                    transform_config.decimal_places
+                );
+            }
+            self.processor
+                .add_plugin(TransformOptimizerPlugin::new(transform_config.decimal_places));
+        }
+
         if config.gradient_deduplicator {
             if self.verbose {
                 println!("Enabling gradient deduplicator");
@@ -238,6 +250,13 @@ impl SVGProcessorCLI {
         println!("     --path-decimals <VALUE>");
         println!(
             "     Optimizes path data by reducing decimal places and removing unnecessary spaces"
+        );
+        println!();
+        println!("  2. Transform Optimizer");
+        println!("     --optimize-transforms");
+        println!("     --transform-decimals <VALUE>");
+        println!(
+            "     Optimizes transform attributes by removing identity transforms and simplifying values"
         );
     }
 }

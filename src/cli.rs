@@ -48,6 +48,14 @@ pub struct OptimizeArgs {
     #[arg(long, default_value = "2")]
     pub path_decimals: usize,
 
+    /// Enable transform optimization
+    #[arg(long)]
+    pub optimize_transforms: bool,
+
+    /// Decimal places for transform optimization (default: 2)
+    #[arg(long, default_value = "2")]
+    pub transform_decimals: usize,
+
     /// Enable gradient deduplication
     #[arg(long)]
     pub dedupe_gradients: bool,
@@ -76,12 +84,17 @@ pub struct AnalyzeArgs {
 #[derive(Default)]
 pub struct PluginConfig {
     pub path_optimizer: Option<PathOptimizerConfig>,
+    pub transform_optimizer: Option<TransformOptimizerConfig>,
     pub gradient_deduplicator: bool,
     pub id_remover: IdRemoverConfig,
     pub data_attr_remover: bool,
 }
 
 pub struct PathOptimizerConfig {
+    pub decimal_places: usize,
+}
+
+pub struct TransformOptimizerConfig {
     pub decimal_places: usize,
 }
 
@@ -105,6 +118,13 @@ impl From<&OptimizeArgs> for PluginConfig {
             path_optimizer: if args.optimize_paths {
                 Some(PathOptimizerConfig {
                     decimal_places: args.path_decimals,
+                })
+            } else {
+                None
+            },
+            transform_optimizer: if args.optimize_transforms {
+                Some(TransformOptimizerConfig {
+                    decimal_places: args.transform_decimals,
                 })
             } else {
                 None
