@@ -46,7 +46,8 @@ impl CommonTransformOptimizer {
     }
 
     fn analyze_transform(&mut self, element: &BytesStart, transform_value: String) {
-        let entry = self.transform_counts
+        let entry = self
+            .transform_counts
             .entry(transform_value.clone())
             .or_insert_with(|| TransformInfo {
                 count: 0,
@@ -66,7 +67,8 @@ impl CommonTransformOptimizer {
     }
 
     fn get_common_transforms(&self) -> Vec<(String, &TransformInfo)> {
-        let mut transforms: Vec<_> = self.transform_counts
+        let mut transforms: Vec<_> = self
+            .transform_counts
             .iter()
             .filter(|(_, info)| info.count >= self.min_occurrences)
             .map(|(t, info)| (t.clone(), info))
@@ -108,7 +110,7 @@ impl SVGPlugin for CommonTransformOptimizer {
         let common = self.get_common_transforms();
 
         if !common.is_empty() {
-            eprintln!("\n🔍 Common Transform Analysis:");
+            println!("\n🔍 Common Transform Analysis:");
             eprintln!("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
 
             for (i, (transform, info)) in common.iter().enumerate() {
@@ -119,15 +121,19 @@ impl SVGPlugin for CommonTransformOptimizer {
 
                 eprintln!("\n#{} Transform: \"{}\"", i + 1, transform);
                 eprintln!("   Occurrences: {}", info.count);
-                eprintln!("   Potential bytes saved: {} bytes ({:.1} KB)",
+                eprintln!(
+                    "   Potential bytes saved: {} bytes ({:.1} KB)",
                     info.bytes_saved_potential,
                     info.bytes_saved_potential as f64 / 1024.0
                 );
 
                 eprintln!("   Used in:");
                 for (elem_type, count) in &info.element_types {
-                    eprintln!("     - <{}>: {} times",
-                        String::from_utf8_lossy(elem_type), count);
+                    eprintln!(
+                        "     - <{}>: {} times",
+                        String::from_utf8_lossy(elem_type),
+                        count
+                    );
                 }
 
                 eprintln!("\n   💡 Optimization suggestions:");
@@ -150,27 +156,43 @@ impl SVGPlugin for CommonTransformOptimizer {
 impl PluginStatistics for CommonTransformOptimizer {
     fn get_statistics(&self) -> Vec<(&str, String)> {
         let common = self.get_common_transforms();
-        let total_potential_savings: usize = common.iter()
+        let total_potential_savings: usize = common
+            .iter()
             .map(|(_, info)| info.bytes_saved_potential)
             .sum();
 
-        let most_common = common.first().map(|(t, info)|
-            format!("\"{}\" ({} times)",
-                if t.len() > 50 { &format!("{}...", &t[..50]) } else { t },
-                info.count
-            )
-        ).unwrap_or_else(|| "None".to_string());
+        let most_common = common
+            .first()
+            .map(|(t, info)| {
+                format!(
+                    "\"{}\" ({} times)",
+                    if t.len() > 50 {
+                        format!("{}...", &t[..50])
+                    } else {
+                        t.to_string()
+                    },
+                    info.count
+                )
+            })
+            .unwrap_or_else(|| "None".to_string());
 
         vec![
             ("Elements processed", self.total_elements.to_string()),
-            ("Elements with transforms", self.elements_with_transforms.to_string()),
+            (
+                "Elements with transforms",
+                self.elements_with_transforms.to_string(),
+            ),
             ("Unique transforms", self.transform_counts.len().to_string()),
             ("Common transforms (≥10 uses)", common.len().to_string()),
             ("Most common transform", most_common),
-            ("Total potential savings", format!("{} bytes ({:.1} KB)",
-                total_potential_savings,
-                total_potential_savings as f64 / 1024.0
-            )),
+            (
+                "Total potential savings",
+                format!(
+                    "{} bytes ({:.1} KB)",
+                    total_potential_savings,
+                    total_potential_savings as f64 / 1024.0
+                ),
+            ),
         ]
     }
 }
