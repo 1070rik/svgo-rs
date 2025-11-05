@@ -56,6 +56,14 @@ pub struct OptimizeArgs {
     #[arg(long, default_value = "2")]
     pub transform_decimals: usize,
 
+    /// Analyze common transforms (always enabled in verbose mode)
+    #[arg(long)]
+    pub analyze_common_transforms: bool,
+
+    /// Remove a specific transform from all elements
+    #[arg(long)]
+    pub remove_transform: Option<String>,
+
     /// Enable gradient deduplication
     #[arg(long)]
     pub dedupe_gradients: bool,
@@ -85,6 +93,8 @@ pub struct AnalyzeArgs {
 pub struct PluginConfig {
     pub path_optimizer: Option<PathOptimizerConfig>,
     pub transform_optimizer: Option<TransformOptimizerConfig>,
+    pub common_transform_analyzer: bool,
+    pub remove_common_transform: Option<String>,
     pub gradient_deduplicator: bool,
     pub id_remover: IdRemoverConfig,
     pub data_attr_remover: bool,
@@ -129,6 +139,8 @@ impl From<&OptimizeArgs> for PluginConfig {
             } else {
                 None
             },
+            common_transform_analyzer: args.analyze_common_transforms,
+            remove_common_transform: args.remove_transform.clone(),
             gradient_deduplicator: args.dedupe_gradients,
             id_remover: IdRemoverConfig {
                 enabled: args.remove_ids,

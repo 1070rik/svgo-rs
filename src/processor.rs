@@ -10,6 +10,8 @@ use crate::cli::PluginConfig;
 use crate::plugins::{
     PathOptimizerPlugin,
     TransformOptimizerPlugin,
+    CommonTransformOptimizer,
+    RemoveCommonTransformOptimizer,
     // DeduplicateGradientsPlugin,
     // RemoveIDPlugin,
     // RemoveDataAttributesPlugin,
@@ -166,6 +168,24 @@ impl SVGProcessorCLI {
             }
             self.processor
                 .add_plugin(TransformOptimizerPlugin::new(transform_config.decimal_places));
+        }
+
+        // Enable common transform analyzer (always on in verbose mode, or if explicitly requested)
+        if config.common_transform_analyzer || self.verbose {
+            if self.verbose {
+                println!("Enabling common transform analyzer");
+            }
+            self.processor
+                .add_plugin(CommonTransformOptimizer::new(10));
+        }
+
+        // Remove specific transform if requested
+        if let Some(ref transform_to_remove) = config.remove_common_transform {
+            if self.verbose {
+                println!("Enabling removal of transform: \"{}\"", transform_to_remove);
+            }
+            self.processor
+                .add_plugin(RemoveCommonTransformOptimizer::new(transform_to_remove.clone()));
         }
 
         if config.gradient_deduplicator {

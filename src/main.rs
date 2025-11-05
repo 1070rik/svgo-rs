@@ -43,6 +43,8 @@ fn run(cli: Cli) -> std::io::Result<()> {
                 transform_optimizer: Some(cli::TransformOptimizerConfig {
                     decimal_places: 2,
                 }),
+                common_transform_analyzer: true,  // Always analyze in analyze mode
+                remove_common_transform: None,
                 gradient_deduplicator: true,
                 id_remover: cli::IdRemoverConfig::default(),
                 data_attr_remover: true,
@@ -88,6 +90,8 @@ mod tests {
             path_decimals: 3,
             optimize_transforms: true,
             transform_decimals: 2,
+            analyze_common_transforms: false,
+            remove_transform: Some("matrix(0,.3333333,.3333333,0,0,0)".to_string()),
             dedupe_gradients: true,
             remove_ids: true,
             remove_data_attrs: false,
@@ -100,6 +104,8 @@ mod tests {
         assert_eq!(config.path_optimizer.unwrap().decimal_places, 3);
         assert!(config.transform_optimizer.is_some());
         assert_eq!(config.transform_optimizer.unwrap().decimal_places, 2);
+        assert!(!config.common_transform_analyzer);
+        assert!(config.remove_common_transform.is_some());
         assert!(config.gradient_deduplicator);
         assert!(config.id_remover.enabled);
         assert!(!config.data_attr_remover);

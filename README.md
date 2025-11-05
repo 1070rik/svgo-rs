@@ -79,10 +79,12 @@ OPTIONS:
 svgo-rs optimize [OPTIONS] <INPUT> <OUTPUT>
 
 OPTIONS:
-    --optimize-paths           Enable path optimization
-    --path-decimals <N>        Decimal places for path optimization [default: 2]
-    --optimize-transforms      Enable transform optimization
-    --transform-decimals <N>   Decimal places for transform optimization [default: 2]
+    --optimize-paths              Enable path optimization
+    --path-decimals <N>           Decimal places for path optimization [default: 2]
+    --optimize-transforms         Enable transform optimization
+    --transform-decimals <N>      Decimal places for transform optimization [default: 2]
+    --analyze-common-transforms   Analyze common transforms (auto-enabled in verbose mode)
+    --remove-transform <TRANSFORM> Remove a specific transform from all elements
 
 TODO OPTIONS:
     --dedupe-gradients        Enable gradient deduplication
@@ -138,6 +140,45 @@ svgo-rs optimize input.svg output.svg --optimize-transforms --transform-decimals
 - `rotate(angle)` - Removes if angle=0
 - `skewX(angle)` / `skewY(angle)` - Removes if angle=0
 - `matrix(a, b, c, d, e, f)` - Removes if identity matrix (1,0,0,1,0,0)
+
+### Common Transform Analyzer
+Analyzes SVG files to find repeated transform attributes across many elements. Automatically enabled in verbose mode.
+
+```bash
+svgo-rs optimize input.svg output.svg -v
+# or explicitly:
+svgo-rs optimize input.svg output.svg --analyze-common-transforms
+```
+
+**Output example:**
+```
+🔍 Common Transform Analysis:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+#1 Transform: "matrix(0,.3333333,.3333333,0,0,0)"
+   Occurrences: 1247
+   Potential bytes saved: 59,856 bytes (58.5 KB)
+   Used in:
+     - <path>: 1247 times
+
+   💡 Optimization suggestions:
+     • Group elements with the same transform
+     • Pre-apply transform to path coordinates
+     • Use CSS classes for repeated transforms
+```
+
+### Remove Common Transform
+Removes a specific transform from ALL elements in the SVG. Useful when the same transform appears thousands of times.
+
+```bash
+# Remove the exact transform from all elements
+svgo-rs optimize input.svg output.svg \
+  --remove-transform "matrix(0,.3333333,.3333333,0,0,0)"
+```
+
+**Use case:** SVG files exported from CAD software often have the same transform on every element. This can save 50-200+ KB on large files.
+
+**⚠️ Warning:** Only use this if you're sure removing the transform won't break your SVG. The transform must match exactly (including spacing and decimal places).
 
 ## Performance
 
