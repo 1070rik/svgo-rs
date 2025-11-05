@@ -12,6 +12,7 @@ use crate::plugins::{
     TransformOptimizerPlugin,
     CommonTransformOptimizer,
     RemoveCommonTransformOptimizer,
+    PreApplyTransformOptimizer,
     // DeduplicateGradientsPlugin,
     // RemoveIDPlugin,
     // RemoveDataAttributesPlugin,
@@ -186,6 +187,15 @@ impl SVGProcessorCLI {
             }
             self.processor
                 .add_plugin(RemoveCommonTransformOptimizer::new(transform_to_remove.clone()));
+        }
+
+        // Pre-apply specific transform if requested
+        if let Some(ref transform_to_apply) = config.pre_apply_transform {
+            if self.verbose {
+                println!("Enabling pre-application of transform: \"{}\"", transform_to_apply);
+            }
+            self.processor
+                .add_plugin(PreApplyTransformOptimizer::new(transform_to_apply.clone()));
         }
 
         if config.gradient_deduplicator {

@@ -45,6 +45,7 @@ fn run(cli: Cli) -> std::io::Result<()> {
                 }),
                 common_transform_analyzer: true,  // Always analyze in analyze mode
                 remove_common_transform: None,
+                pre_apply_transform: None,
                 gradient_deduplicator: true,
                 id_remover: cli::IdRemoverConfig::default(),
                 data_attr_remover: true,
@@ -92,6 +93,7 @@ mod tests {
             transform_decimals: 2,
             analyze_common_transforms: false,
             remove_transform: Some("matrix(0,.3333333,.3333333,0,0,0)".to_string()),
+            pre_apply_transform: None,
             dedupe_gradients: true,
             remove_ids: true,
             remove_data_attrs: false,

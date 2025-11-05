@@ -64,6 +64,10 @@ pub struct OptimizeArgs {
     #[arg(long)]
     pub remove_transform: Option<String>,
 
+    /// Pre-apply (bake) a specific transform into path coordinates and remove the attribute
+    #[arg(long)]
+    pub pre_apply_transform: Option<String>,
+
     /// Enable gradient deduplication
     #[arg(long)]
     pub dedupe_gradients: bool,
@@ -95,6 +99,7 @@ pub struct PluginConfig {
     pub transform_optimizer: Option<TransformOptimizerConfig>,
     pub common_transform_analyzer: bool,
     pub remove_common_transform: Option<String>,
+    pub pre_apply_transform: Option<String>,
     pub gradient_deduplicator: bool,
     pub id_remover: IdRemoverConfig,
     pub data_attr_remover: bool,
@@ -141,6 +146,7 @@ impl From<&OptimizeArgs> for PluginConfig {
             },
             common_transform_analyzer: args.analyze_common_transforms,
             remove_common_transform: args.remove_transform.clone(),
+            pre_apply_transform: args.pre_apply_transform.clone(),
             gradient_deduplicator: args.dedupe_gradients,
             id_remover: IdRemoverConfig {
                 enabled: args.remove_ids,
