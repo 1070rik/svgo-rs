@@ -104,34 +104,40 @@ svgo-rs optimize input.svg output.svg --optimize-paths --path-decimals 2
 ```
 
 **Example:**
-```
-Input:  <path d="M 100.000 200.000 L 300.000 400.000"/>
-Output: <path d="M100 200L300 400"/>
+```xml
+<!-- Before -->
+<path d="M 100.000 200.000 L 300.000 400.000"/>
+
+<!-- After -->
+<path d="M100 200L300 400"/>
 ```
 
 ### Transform Optimizer
 Optimizes SVG transform attributes by:
 - Removing identity transforms (e.g., `translate(0,0)`, `scale(1)`, `rotate(0)`)
 - Reducing decimal place precision
+- Removing trailing zeros
 - Simplifying transform values
-- Removing unnecessary whitespace
 
 ```bash
 svgo-rs optimize input.svg output.svg --optimize-transforms --transform-decimals 2
 ```
 
 **Example:**
-```
-Input:  <g transform="translate(10.123, 20.456) scale(1) rotate(0)">
-Output: <g transform="translate(10.12 20.46)">
+```xml
+<!-- Before -->
+<g transform="translate(10.000, 20.000) scale(1) rotate(0)">
+
+<!-- After -->
+<g transform="translate(10 20)">
 ```
 
 **Supported transforms:**
-- `translate(x, y)` - Removes if x and y are 0
-- `scale(x, y)` - Removes if values are 1
-- `rotate(angle)` - Removes if angle is 0
-- `skewX(angle)` / `skewY(angle)` - Removes if angle is 0
-- `matrix(a, b, c, d, e, f)` - Removes if identity matrix
+- `translate(x, y)` - Removes if x=0 and y=0
+- `scale(x, y)` - Removes if x=1 and y=1
+- `rotate(angle)` - Removes if angle=0
+- `skewX(angle)` / `skewY(angle)` - Removes if angle=0
+- `matrix(a, b, c, d, e, f)` - Removes if identity matrix (1,0,0,1,0,0)
 
 ## Performance
 
